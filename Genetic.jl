@@ -1,6 +1,17 @@
 function InitPopulation(Pb::Problem,N::Int32)
-
-   return Pb
+   Population  = Vector{Genome}(N)
+   min::Float64 = typemax(Float64)
+   for i in 1:1:N
+      Population[i]= Genome(0.0,0.0,0.0,rand(0:1,Pb.Preci),rand(0:1,Pb.Preci))
+      Population[i].Valx1 = BitStringToFloat(Pb,Population[i].x1)
+      Population[i].Valx2 = BitStringToFloat(Pb,Population[i].x2)
+      Population[i] = EvaluateSol(Pb,Population[i])
+      if Population[i].CurrObj < Pb.MinObj
+         Pb.MinObj = Population[i].CurrObj
+         println("New minimum :",Pb.MinObj)
+      end
+   end
+   return Population,Pb
 end
 function EvaluateSol(Pb::Problem,Indi::Genome)
    val1::Float64 = 0
