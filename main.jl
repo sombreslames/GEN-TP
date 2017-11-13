@@ -11,6 +11,7 @@ type Problem
    Preci::Int32
    Delta::Float64
    MinVal::Float64
+   SumObj::Float64
    MinObj::Float64
 end
 #Individual two --> Containing only the solution

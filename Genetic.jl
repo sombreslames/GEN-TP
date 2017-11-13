@@ -10,7 +10,9 @@ function InitPopulation(Pb::Problem,N::Int32)
          Pb.MinObj = Population[i].CurrObj
          println("New minimum :",Pb.MinObj)
       end
+      Pb.SumObj += Population[i].CurrObj
    end
+   Population = sort(Population,by=a->a.CurrentObjectiveValue)
    return Population,Pb
 end
 function EvaluateSol(Pb::Problem,Indi::Genome)
@@ -38,21 +40,13 @@ function Evolution(Population::Vector{Genome},Pb::Problem,NPop::Int32,Ngen::Int3
    SaveResultPop = Array{Vector{Genome}}(Ngen+1)
    SaveResultPop[1] = deepcopy(Population)
    for i  = 1:1:Ngen
+      tic()
        for j = 1:2:NPop
          #here repair and mutate
          ProbMut = rand(RdSeed)
          if ProbMut > 0.3
             p1,p2          = BinaryTourmanent(Population,NPop,Pb)
             child1,child2  = CrossoverMethod(Pb,[Population[p1],Population[p2]])
-
-            if child1.Solution != Population[p1].Solution && child1.Solution != Population[p2].Solution
-               child1 = RepairAndMutationSparse(Pb,child1)
-               child1 = AugmentIndividual(Pb,child1)
-            end
-            if child2.Solution != Population[p1].Solution && child2.Solution != Population[p2].Solution
-               child2 = RepairAndMutationSparse(Pb,child2)
-               child2 = AugmentIndividual(Pb,child2)
-            end
 
             InsertAndReplace(Pb,Population,child1)
             InsertAndReplace(Pb,Population,child2)
@@ -65,7 +59,7 @@ function Evolution(Population::Vector{Genome},Pb::Problem,NPop::Int32,Ngen::Int3
       println("# Generation : ",i)
       println("# Moyenne : ",round(Pb.SumObj/NPop,2))
       println("# MIN : ", Pb.MinObj, " | MAX : ",Population[1].CurrObj)
-      println("# Time spend : ",time, "s | ",round((it/(Ngen*NPop))*100,2),"% done")
+      println("# Time spend : ",round(toc(),4), "s | ",round((it/(Ngen*NPop))*100,2),"% done")
       println("############################################################")
       if ((Population[1].CurrObj - Population[NPop].CurrObj) / (Pb.SumObj/NPop)) < stoplimit
          break
@@ -104,7 +98,6 @@ function RouletteSelection(Population::Vector{Genome},N::Int32,Pb::Problem)
    return rand(RdSeed,1:N),rand(RdSeed,1:N)
 end
 function BinaryTourmanent(Population::Vector{Genome},N::Int32,Pb::Problem)
-   #Mode = true ==> Same Probability for each individual
    p1::Int32=0;  p2::Int32=0
    p3::Int32=0;  p4::Int32=0
 
@@ -169,7 +162,7 @@ function CrossoverMethod(Pb::Problem,Parents::Vector{Genome})
 end
 
 function InsertAndReplace(Pb::Problem,Population::Vector{Genome},Indi::Genome)
-   index = searchsortedfirst(Population,Indi,by=x->x.CurrObj,rev=true)
+   index = searchsortedfirst(Population,Indi,by=x->x.CurrObj)
    insert!(Population,index,Indi)
    Pb.SumObj += Indi.CurrObj
    PopSize = length(Population)
